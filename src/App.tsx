@@ -1,26 +1,36 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useCallback, useState } from 'react';
+import { Search } from './Components/Search';
+import { useDispatch } from 'react-redux';
+import { getUser } from './Api/getUser';
+import { setIsNotFound, setUser } from './Store/User/userSlice';
+import { UserCard } from './Components/UserCard';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App: React.FC = () => {
+	const [isLoading, setIsLoading] = useState(false);
+	const dispatch = useDispatch();
+
+	const findUser = useCallback(async (username: string): Promise<void> => {
+		try {
+			setIsLoading(true);
+
+			const userResponse = await getUser(username);
+
+			dispatch(setUser(userResponse.data));
+			dispatch(setIsNotFound(false));
+		} catch (err) {
+			dispatch(setUser(null));
+			dispatch(setIsNotFound(true));
+		} finally {
+			setIsLoading(false);
+		}
+	}, []);
+
+	return (
+		<main className='app'>
+			<Search findUser={findUser} />
+			<UserCard isLoading={isLoading} />
+		</main>
+	);
+};
 
 export default App;
